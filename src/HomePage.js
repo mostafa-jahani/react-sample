@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import axios from "axios";
 import Loading from "./components/layouts/Loading";
 import {usePostsQuery} from './redux/postApi'
-import App from "./App";
+import MyModal from "./components/widgets/MyModal";
 
 const HomePage = () => {
 
@@ -22,6 +22,9 @@ const HomePage = () => {
     // }, []);
 
     const {data: posts, isError, error, isLoading, isSuccess} = usePostsQuery()
+    const [isOpen, setIsOpen] = useState(false)
+    function closeModal() {setIsOpen(false)}
+    const [selectedPost, setSelectedPost] = useState(null)
 
     if (isError) {
         return (
@@ -38,6 +41,14 @@ const HomePage = () => {
 
     return (
         <>
+
+            <button className="btn btn-primary" onClick={() => {
+                setIsOpen(true)
+            }}>Open Modal</button>
+
+            <MyModal value={isOpen} closeModal={closeModal} data={selectedPost}/>
+
+
             <div className="container mx-auto mt-5">
 
                 {/* Search Form */}
@@ -72,9 +83,12 @@ const HomePage = () => {
 
                                     <tbody>
                                     {posts && posts.map(post => (
-                                        <tr key={post.id}>
+                                        <tr key={post.id} className="cursor-pointer" onClick={() => {
+                                            setIsOpen(true)
+                                            setSelectedPost(post)
+                                        }}>
                                             <td>{post.id}</td>
-                                            <td>{`${post.title.substring(0, 60)}...`}</td>
+                                            <td>{post.title.length > 60 ? `${post.title.substring(0, 60)}...` : post.title}</td>
                                             <td>{`${post.body.substring(0, 60)}...`}</td>
                                         </tr>
                                     ))}
