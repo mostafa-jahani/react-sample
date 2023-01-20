@@ -1,30 +1,49 @@
 import React, {useEffect, useState} from "react";
-import axios from "axios";
 import Loading from "./components/layouts/Loading";
 import {usePostsQuery} from './redux/postApi'
 import MyModal from "./components/widgets/MyModal";
 
-const HomePage = () => {
 
-    // const [posts, setPosts] = useState([]);
-    // const [loading, setLoading] = useState(true);
-    // const [error, setError] = useState(null);
-    //
-    // useEffect(() => {
-    //     axios.get("https://jsonplaceholder.typicode.com/posts").then(response => {
-    //         setPosts(response.data)
-    //         setLoading(false)
-    //         setError(null)
-    //     }).catch(err => {
-    //         setError(err.message)
-    //         setLoading(false)
-    //     })
-    // }, []);
+const HomePage = () => {
 
     const {data: posts, isError, error, isLoading, isSuccess} = usePostsQuery()
     const [isOpen, setIsOpen] = useState(false)
-    function closeModal() {setIsOpen(false)}
+
+    function closeModal() {
+        setIsOpen(false)
+    }
+
     const [selectedPost, setSelectedPost] = useState(null)
+
+    const [initData, setInitData] = useState(posts);
+    const [searchChar, setSearchChar] = useState("");
+
+    const [tableData, setTableData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pages, setPages] = useState([]);
+    const [pageCount, setPageCount] = useState(1);
+    const numOfPage = 5
+
+    useEffect(() => {
+        let pCount = initData && Math.ceil(initData.length / numOfPage)
+        setPageCount(pCount)
+
+        let pArr = []
+        for (let i = 1; i <= pCount; i++) pArr = [...pArr, i]
+        setPages(pArr)
+    }, [initData]);
+
+    useEffect(() => {
+        let start = (currentPage * numOfPage) - numOfPage
+        let end = (currentPage * numOfPage)
+        setTableData(initData && initData.slice(start, end))
+    }, [currentPage, initData]);
+
+    useEffect(() => {
+        setInitData(posts && posts.filter(p => p.title.includes(searchChar)))
+        setCurrentPage(1)
+    }, [searchChar]);
+
 
     if (isError) {
         return (
@@ -35,17 +54,11 @@ const HomePage = () => {
         )
     }
 
-    if (isLoading) return <Loading />
-
+    if (isLoading) return <Loading/>
 
 
     return (
         <>
-
-            <button className="btn btn-primary" onClick={() => {
-                setIsOpen(true)
-            }}>Open Modal</button>
-
             <MyModal value={isOpen} closeModal={closeModal} data={selectedPost}/>
 
 
@@ -56,7 +69,14 @@ const HomePage = () => {
                     <form>
                         <div className="d-flex gap-3">
                             <div>
-                                <input type="text" name="search_input" id="search_input" className="form-control flex-grow-1" placeholder="type every word..."/>
+                                <input
+                                    type="text"
+                                    name="search_input"
+                                    id="search_input"
+                                    className="form-control flex-grow-1"
+                                    placeholder="search in title..."
+                                    onChange={(e) => setSearchChar(e.target.value)}
+                                />
                             </div>
                             <div>
                                 <button type="submit" className="form-control btn btn-primary">Search</button>
@@ -71,7 +91,7 @@ const HomePage = () => {
                     <>
                         {/*Table*/}
                         <div className="w-100 mt-3 p-3">
-                            {posts &&
+                            {tableData &&
                                 <table className="table table-striped table-hover">
                                     <thead>
                                     <tr>
@@ -82,7 +102,7 @@ const HomePage = () => {
                                     </thead>
 
                                     <tbody>
-                                    {posts && posts.map(post => (
+                                    {tableData && tableData.map(post => (
                                         <tr key={post.id} className="cursor-pointer" onClick={() => {
                                             setIsOpen(true)
                                             setSelectedPost(post)
@@ -98,17 +118,44 @@ const HomePage = () => {
                         </div>
                         {/*Table*/}
 
-                        {/*Pagination*/}
-                        <nav className="d-flex justify-content-center">
-                            <ul className="pagination">
-                                <li className="page-item"><a className="page-link" href="#">1</a></li>
-                                <li className="page-item active" aria-current="page">
-                                    <span className="page-link">2</span>
-                                </li>
-                                <li className="page-item"><a className="page-link" href="#">3</a></li>
-                            </ul>
-                        </nav>
-                        {/*Pagination*/}
+
+
+                        {/* Pagination */}
+                        {
+                            pages.length > 1 ?
+                                (
+                                    <nav className="">
+                                        <ul className="pagination justify-content-center">
+                                            <li className={`page-item cursor-pointer ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <span className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
+                                        Previous
+                                    </span>
+                                            </li>
+
+                                            {
+                                                pages && pages.map(page => (
+                                                    <li className="page-item" key={page}>
+                                            <span
+                                                className={`page-link cursor-pointer ${currentPage === page ? 'active' : ''}`}
+                                                onClick={() => setCurrentPage(page)}>
+                                                {page}
+                                            </span>
+                                                    </li>
+                                                ))
+                                            }
+
+                                            <li className={`page-item cursor-pointer ${currentPage === pageCount ? 'disabled' : ''}`}>
+                                    <span className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
+                                        Next
+                                    </span>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                ) : null
+                        }
+                        {/* Pagination */}
+
+
                     </>
                 }
 
