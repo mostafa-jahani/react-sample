@@ -1,6 +1,5 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/dist/query/react";
 
-
 export const postApi = createApi({
     reducerPath: "postApi",
     baseQuery: fetchBaseQuery({
@@ -12,12 +11,8 @@ export const postApi = createApi({
             query: () => "posts",
             providesTags: ['Post'],
         }),
-        post: builder.query({
-            query: (id) => `posts/${id}`,
-            providesTags: ['Post'],
-        }),
     })
 })
 
 
-export const {usePostsQuery, usePostQuery} = postApi
+export const {usePostsQuery} = postApi
